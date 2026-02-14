@@ -1,0 +1,19 @@
+{
+  "name": "voxari-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/dashboard & npm run dev -w apps/gateway",
+    "build": "npm run build -ws",
+    "test": "npm run test -ws"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  }
+}

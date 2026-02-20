@@ -1,39 +1,19 @@
-modules = ["nodejs-20", "web"]
-[agent]
-expertMode = true
+run = "npm run dev"
+entrypoint = "index.js"
+modules = ["nodejs-20"]
 
 [nix]
-channel = "stable-25_05"
+channel = "stable-23_11"
 
-[workflows]
-runButton = "Project"
+[hints]
+suggest_env = true
 
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev -w apps/dashboard"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+[deployment]
+run = "npm start"
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[deployment]
-deploymentTarget = "autoscale"
-run = ["npm", "run", "start", "-w", "apps/dashboard"]
-build = ["npm", "run", "build", "-w", "apps/dashboard"]
+[[ports]]
+localPort = 3001
+externalPort = 8080

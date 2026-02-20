@@ -8,12 +8,19 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w apps/dashboard & npm run dev -w apps/gateway",
+    "dev": "concurrently \"npm run dev:dashboard\" \"npm run dev:gateway\"",
+    "dev:dashboard": "PORT=5000 npm run dev -w apps/dashboard",
+    "dev:gateway": "PORT=3001 npm run dev -w apps/gateway",
     "build": "npm run build -ws",
-    "test": "npm run test -ws"
+    "start": "concurrently \"npm run start:dashboard\" \"npm run start:gateway\"",
+    "start:dashboard": "PORT=5000 npm run start -w apps/dashboard",
+    "start:gateway": "PORT=3001 npm run dev -w apps/gateway",
+    "test": "npm run test -ws",
+    "kill": "fuser -k 5000/tcp || true && fuser -k 3001/tcp || true"
   },
   "devDependencies": {
+    "typescript": "^5.0.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "concurrently": "^8.0.0"
   }
 }

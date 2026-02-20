@@ -1,5 +1,5 @@
 // @ts-ignore
-import { GoogleSearchResults } from 'google-search-results-nodejs';
+import GoogleSearchResults from 'google-search-results-nodejs';
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 
@@ -17,7 +17,8 @@ export class GrowthEngine {
   constructor(serpKey: string) { this.serpKey = serpKey; }
 
   async searchLeads(query: string): Promise<Lead[]> {
-    const search = new GoogleSearchResults(this.serpKey);
+    // @ts-ignore
+    const search = new GoogleSearchResults.GoogleSearchResults(this.serpKey);
     return new Promise((resolve, reject) => {
       search.json({ q: query, tbm: 'lcl' }, (data: any) => {
         if (data.error) return reject(data.error);

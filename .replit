@@ -1,0 +1,26 @@
+run = "pnpm dev"
+
+[nix]
+channel = "stable-23_11"
+
+[interpreter]
+command = "pnpm dev"
+
+[deployment]
+run = "pnpm start"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[[ports]]
+localPort = 3001
+externalPort = 81
+
+[[ports]]
+localPort = 3002
+externalPort = 82
+
+[[ports]]
+localPort = 4000
+externalPort = 443

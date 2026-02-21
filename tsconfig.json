@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "lib": ["ESNext", "DOM"],
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@callfoundry/types": ["packages/types/src"],
+      "@callfoundry/ui": ["packages/ui/src"],
+      "@callfoundry/core": ["packages/core/src"],
+      "@callfoundry/database": ["packages/database/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

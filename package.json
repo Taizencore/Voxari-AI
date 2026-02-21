@@ -1,0 +1,23 @@
+{
+  "name": "callfoundry-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CallFoundry: Autonomous Multi-Vertical Revenue Infrastructure",
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --filter !./apps/* build",
+    "test": "pnpm run test",
+    "lint": "pnpm run lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.4"
+}

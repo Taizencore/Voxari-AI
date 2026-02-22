@@ -1,0 +1,320 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  SUPPORT
+  TENANT_ADMIN
+  TENANT_AGENT
+}
+
+enum VerticalPack {
+  MEDSPA
+  CLINIC_GENERAL
+  LUXE_AESTHETIC
+}
+
+enum VoiceProvider {
+  OPENAI_REALTIME
+  ELEVENLABS
+}
+
+enum DealStage {
+  NEW
+  CONTACTED
+  DEMO_BOOKED
+  PROPOSAL_SENT
+  PAYMENT_SENT
+  PAID
+  PROVISIONING
+  LIVE
+  LOST
+}
+
+enum PaymentProvider {
+  DODO
+}
+
+enum PaymentLinkStatus {
+  CREATED
+  SENT
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_TENANT
+  RESOLVED
+  CLOSED
+}
+
+model Tenant {
+  id            String   @id @default(cuid())
+  name          String
+  verticalPack  VerticalPack
+  timezone      String   @default("America/New_York")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  settings      TenantSettings?
+  users         User[]
+  services      Service[]
+  appointments  Appointment[]
+  calls         Call[]
+  tickets       Ticket[]
+  telnyxNumbers TelnyxNumber[]
+}
+
+model OwnerSettings {
+  id                              String   @id @default("OWNER_SETTINGS_SINGLETON")
+  elevenlabsEnabledGlobally        Boolean  @default(false)
+  elevenlabsVisibleToTenants       Boolean  @default(false)
+  elevenlabsAutoApplyAllTenants    Boolean  @default(false)
+  elevenlabsAllowTenantOverride    Boolean  @default(false)
+  elevenlabsDefaultVoiceId         String?
+  elevenlabsMarkupMultiplier       Float    @default(2.0)
+  elevenlabsExclusionTenantIds     String[] @default([])
+  createdAt                        DateTime @default(now())
+  updatedAt                        DateTime @updatedAt
+}
+
+model TenantSettings {
+  id                    String        @id @default(cuid())
+  tenantId              String        @unique
+  tenant                Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  businessPhonePublic   String?
+  businessEmail         String?
+  address               String?
+  hoursJson             Json          // business hours + after hours rules
+  routingRulesJson      Json          // pack routing overrides (escalation, after-hours, VIP rules)
+  knowledgeBaseJson     Json          // FAQs, policies, disclaimers, service notes for agent
+
+  // Voice settings
+  voiceProvider         VoiceProvider @default(OPENAI_REALTIME)
+  elevenlabsEnabled     Boolean       @default(false)
+  elevenlabsVoiceId     String?
+  premiumVoiceBilling   String        @default("addon") // addon | usage (future)
+  premiumVoicePriceUsd  Float?
+
+  // Compliance toggles
+  storeTranscripts      Boolean       @default(true)
+  storeRecordingsMeta   Boolean       @default(false)
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  durationMin Int
+  priceFrom   Float?
+  depositUsd  Float?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  clientName  String
+  clientPhone String
+  clientEmail String?
+  startAt     DateTime
+  endAt       DateTime
+  status      String   @default("BOOKED") // BOOKED | CANCELLED | RESCHEDULED
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TelnyxNumber {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  phoneE164  String   @unique
+  status     String   @default("ACTIVE")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Call {
+  id              String   @id @default(cuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  direction       String   // inbound | outbound
+  fromE164        String?
+  toE164          String?
+  telnyxCallId    String?  @unique
+  callControlId   String?  @unique
+  status          String   @default("INIT")
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  events          CallEvent[]
+  conversation    Conversation?
+}
+
+model CallEvent {
+  id        String   @id @default(cuid())
+  callId    String
+  call      Call     @relation(fields: [callId], references: [id], onDelete: Cascade)
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  callId    String   @unique
+  call      Call     @relation(fields: [callId], references: [id], onDelete: Cascade)
+  outcome   String?  // booked | transferred | info_only | failed
+  summary   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  ConversationMessage[]
+  toolCalls AIToolCall[]
+  incidents Incident[]
+}
+
+model ConversationMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String   // user | assistant | system
+  content        String
+  createdAt      DateTime @default(now())
+}
+
+model AIToolCall {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  name           String
+  arguments      Json
+  result         Json?
+  success        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model Incident {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  type           String       // webhook_failure | tool_failure | stream_failure | booking_failure
+  severity       String       @default("MED")
+  details        Json
+  createdAt      DateTime     @default(now())
+}
+
+model Prospect {
+  id          String   @id @default(cuid())
+  name        String?
+  business    String?
+  phoneE164   String?
+  email       String?
+  website     String?
+  location    String?
+  verticalHint String?
+  score       Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  deals       Deal[]
+}
+
+model Deal {
+  id          String    @id @default(cuid())
+  prospectId  String
+  prospect    Prospect  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  stage       DealStage @default(NEW)
+  verticalPack VerticalPack
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  paymentLinks PaymentLink[]
+}
+
+model PaymentLink {
+  id           String           @id @default(cuid())
+  dealId       String
+  deal         Deal             @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  provider     PaymentProvider  @default(DODO)
+  status       PaymentLinkStatus @default(CREATED)
+  amountUsd    Float
+  currency     String           @default("USD")
+  checkoutUrl  String
+  providerRef  String?          @unique
+  metadata     Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  events       PaymentEvent[]
+}
+
+model PaymentEvent {
+  id           String   @id @default(cuid())
+  paymentLinkId String
+  paymentLink  PaymentLink @relation(fields: [paymentLinkId], references: [id], onDelete: Cascade)
+  providerEventId String  @unique
+  type         String
+  payload      Json
+  receivedAt   DateTime @default(now())
+  processedAt  DateTime?
+  processingStatus String @default("RECEIVED") // RECEIVED | PROCESSED | FAILED
+}
+
+model Ticket {
+  id        String       @id @default(cuid())
+  tenantId  String
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  status    TicketStatus @default(OPEN)
+  subject   String
+  createdBy String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  messages  TicketMessage[]
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderRole String  // tenant | owner
+  message   String
+  createdAt DateTime @default(now())
+}

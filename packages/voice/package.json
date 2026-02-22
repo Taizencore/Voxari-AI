@@ -1,0 +1,11 @@
+{
+  "name": "@voxari/voice",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "openai": "^4.28.0",
+    "elevenlabs": "^0.1.0",
+    "@voxari/shared": "workspace:*"
+  }
+}

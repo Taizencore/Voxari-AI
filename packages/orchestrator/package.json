@@ -1,0 +1,12 @@
+{
+  "name": "@voxari/orchestrator",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@voxari/shared": "workspace:*",
+    "@voxari/db": "workspace:*",
+    "@voxari/voice": "workspace:*",
+    "@voxari/telephony": "workspace:*"
+  }
+}

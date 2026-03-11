@@ -1,0 +1,19 @@
+run = "npm run dev"
+entrypoint = "index.js"
+modules = ["nodejs-20"]
+
+[nix]
+channel = "stable-23_11"
+
+[hints]
+suggest_env = true
+
+[deployment]
+run = "npm start"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+[[ports]]
+localPort = 3001
+externalPort = 8080

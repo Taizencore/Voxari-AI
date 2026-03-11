@@ -1,0 +1,17 @@
+{
+  "name": "@voxari/core",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "openai": "^4.0.0",
+    "telnyx": "^2.0.0",
+    "@deepgram/sdk": "^3.0.0",
+    "stripe": "^13.0.0",
+    "axios": "^1.0.0",
+    "cheerio": "^1.0.0-rc.12",
+    "google-search-results-nodejs": "^2.0.0",
+    "ws": "^8.0.0"
+  }
+}
